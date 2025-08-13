@@ -3,7 +3,7 @@ name: Lint and Format Check
 on:
   push:
     branches-ignore:
-      - main  # Optional: run only on feature branches, not main
+      - main # Optional: run only on feature branches, not main
   pull_request:
     branches:
       - main
