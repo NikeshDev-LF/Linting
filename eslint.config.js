@@ -1,9 +1,12 @@
 const js = require('@eslint/js');
 const prettier = require('eslint-config-prettier');
+const markdown = require('eslint-plugin-markdown');
 
 module.exports = [
   js.configs.recommended,
   prettier,
+
+  // Base JS config
   {
     plugins: {},
     languageOptions: {
@@ -18,16 +21,13 @@ module.exports = [
       },
     },
     rules: {
-      // Variable naming - enforce camelCase for variables and properties
       camelcase: ['error', { properties: 'always' }],
-
-      // console.log & debugger -> warn only
       'no-console': 'warn',
       'no-debugger': 'warn',
-
-      // Unused variables -> error (ignore ones starting with _)
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'prefer-const': 'error',
       'no-var': 'error',
       'no-underscore-dangle': 'off',
@@ -57,18 +57,16 @@ module.exports = [
     },
   },
 
-  // ✅ Markdown files - must be root & camelCase
+  // ✅ Markdown files - lint content & enforce camelCase naming
   {
+    plugins: { markdown },
     files: ['**/*.md'],
+    processor: 'markdown/markdown',
     rules: {
       'id-match': [
         'error',
-        // Root-level camelCase.md only
         '^(?!.*\\/)[a-z]+([A-Z][a-z0-9]+)*\\.md$',
-        {
-          properties: false,
-          onlyDeclarations: false,
-        },
+        { properties: false, onlyDeclarations: false },
       ],
       'no-restricted-syntax': [
         'error',
@@ -90,7 +88,8 @@ module.exports = [
         'error',
         {
           selector: 'Program',
-          message: '.cy.js files are only allowed inside the cypress/e2e folder.',
+          message:
+            '.cy.js files are only allowed inside the cypress/e2e folder.',
         },
       ],
     },
