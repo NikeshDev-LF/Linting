@@ -1,9 +1,10 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🔍 Running pre-commit checks..."
-
-# Run lint-staged for staged files
+echo "🔍 Running lint-staged on staged files..."
 npx lint-staged
 
-echo "✅ Pre-commit checks completed!"
+status=$?
+if [ $status -ne 0 ]; then
+  echo "❌ Lint errors found. Commit aborted."
+  exit 1
+fi
+
+echo "✅ Lint passed. Proceeding with commit."

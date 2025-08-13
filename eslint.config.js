@@ -1,63 +1,43 @@
 const js = require('@eslint/js');
-const cypress = require('eslint-plugin-cypress');
-const unicorn = require('eslint-plugin-unicorn');
 const prettier = require('eslint-config-prettier');
+const markdown = require('eslint-plugin-markdown');
 
 module.exports = [
   js.configs.recommended,
   prettier,
+
+  // Base JS config
   {
-    plugins: {
-      cypress,
-      unicorn,
-    },
+    plugins: {},
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        browser: true,
-        node: true,
         require: 'readonly',
         module: 'readonly',
         process: 'readonly',
+        browser: true,
+        node: true,
       },
     },
     rules: {
-      // General rules
+      camelcase: ['error', { properties: 'always' }],
       'no-console': 'warn',
-      'no-debugger': 'error',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-debugger': 'warn',
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'prefer-const': 'error',
       'no-var': 'error',
-
-      // Variable naming
-      camelcase: ['error', { properties: 'never' }],
-      'id-match': 'off',
       'no-underscore-dangle': 'off',
-
-      // Default JS filename case (camelCase)
-      'unicorn/filename-case': [
-        'error',
-        {
-          cases: { camelCase: true },
-          ignore: [
-            '\\.config\\.[jt]s$', // config files
-            'package\\.json',
-            'package-lock\\.json',
-            '^\\.', // hidden files
-          ],
-        },
-      ],
-
-      // Misc Unicorn rules
-      'unicorn/no-empty-file': 'error',
-      'unicorn/prefer-module': 'off',
+      'id-match': 'off',
     },
   },
 
-  // ✅ Cypress .cy.js files inside /cypress/
+  // Cypress JS files
   {
-    files: ['cypress/**/*.cy.js'],
+    files: ['cypress/**/*.js'],
     languageOptions: {
       globals: {
         cy: 'readonly',
@@ -74,58 +54,42 @@ module.exports = [
     },
     rules: {
       'no-console': 'off',
-      'unicorn/filename-case': ['error', { cases: { camelCase: true } }],
     },
   },
 
-  // ❌ Disallow .cy.js files outside /cypress/
+  // ✅ Markdown files - lint content & enforce camelCase naming
+  {
+    plugins: { markdown },
+    files: ['**/*.md'],
+    processor: 'markdown/markdown',
+    rules: {
+      'id-match': [
+        'error',
+        '^(?!.*\\/)[a-z]+([A-Z][a-z0-9]+)*\\.md$',
+        { properties: false, onlyDeclarations: false },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Program',
+          message:
+            'Markdown files must be in the project root and use camelCase naming (e.g., readMe.md).',
+        },
+      ],
+    },
+  },
+
+  // ❌ .cy.js files outside /cypress/e2e folder
   {
     files: ['**/*.cy.js'],
-    excludedFiles: ['cypress/**/*.cy.js'],
+    ignores: ['cypress/e2e/**/*.cy.js'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: 'Program',
-          message: '.cy.js files are only allowed inside the cypress/ folder.',
-        },
-      ],
-    },
-  },
-
-  // ❌ Disallow any non-.cy.js file inside /cypress/
-  {
-    files: ['cypress/**/*.*'],
-    excludedFiles: ['cypress/**/*.cy.js'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Program',
-          message: 'Only .cy.js files are allowed inside the cypress/ folder.',
-        },
-      ],
-    },
-  },
-
-  // ✅ Markdown files in root — camelCase only
-  {
-    files: ['*.md'], // root-level only
-    rules: {
-      'unicorn/filename-case': ['error', { cases: { camelCase: true } }],
-    },
-  },
-
-  // ❌ Disallow Markdown files outside root
-  {
-    files: ['**/*.md'],
-    excludedFiles: ['*.md'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Program',
-          message: 'Markdown files are only allowed in the project root.',
+          message:
+            '.cy.js files are only allowed inside the cypress/e2e folder.',
         },
       ],
     },
@@ -146,6 +110,8 @@ module.exports = [
       'yarn.lock',
       '.vscode/',
       '.idea/',
+      '**/*.config.*',
+      '**/*.config',
     ],
   },
 ];
