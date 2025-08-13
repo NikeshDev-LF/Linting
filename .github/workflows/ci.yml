@@ -1,60 +1,31 @@
-name: CI Checks
+name: Lint and Format Check
 
 on:
   push:
-    branches: [main, nikesh]
+    branches-ignore:
+      - main  # Optional: run only on feature branches, not main
   pull_request:
-    branches: [main, nikesh]
+    branches:
+      - main
 
 jobs:
-  code-quality:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for git diff to work correctly
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: 20
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint only on changed files
-        run: |
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD -- '*.js' '*.cy.js' '*.md')
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "Running ESLint on changed files:"
-            echo "$CHANGED_FILES"
-            npx eslint $CHANGED_FILES
-          else
-            echo "No relevant files changed — skipping ESLint."
-          fi
+      - name: Run ESLint on all files
+        run: npm run lint
 
-      - name: Run Cypress tests (Chrome)
-        run: npm run test:form:chrome
-        env:
-          BASE_URL: https://demoqa.com
-          NAV_TIMEOUT_MS: 20000
-          CMD_TIMEOUT_MS: 10000
-          VIEWPORT_WIDTH: 1280
-          VIEWPORT_HEIGHT: 800
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: cypress-screenshots
-          path: cypress/screenshots/
-
-      - name: Upload videos
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cypress-videos
-          path: cypress/videos/
+      - name: Check Prettier formatting
+        run: npm run format:check
