@@ -14,7 +14,7 @@
     "test:chrome": "npx cypress run --browser chrome",
     "test:edge": "npx cypress run --browser edge",
     "open": "npx cypress open",
-    "prepare": "npx husky init && husky install"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
@@ -23,15 +23,13 @@
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
     "prettier": "^3.6.2"
   },
   "lint-staged": {
-    "*.{js,cy.js}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.md": [
-      "prettier --write"
-    ]
-  }
+  "**/*.{js,md}": [
+    "eslint --no-ignore --ext .js,.md --max-warnings=0",
+    "prettier --write"
+  ]
+}
 }
