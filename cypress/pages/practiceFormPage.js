@@ -1,4 +1,4 @@
-export class PracticeFormPage {
+export class Practiceformpage {
   constructor() {
     this.locators = {
       firstName: '#firstName',
