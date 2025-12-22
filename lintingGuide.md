@@ -30,8 +30,11 @@ Your project uses:
 
 - **husky** - Git hooks manager
 - **lint-staged** - Runs linters on staged files only
-- **ESLint** - JavaScript/TypeScript linting
+- **ESLint** - JavaScript linting with flat config (eslint.config.js)
+- **@typescript-eslint** - Advanced naming conventions and rules
+- **eslint-plugin-validate-filename** - Filename pattern validation
 - **Prettier** - Code formatting
+- **globals** - Environment-specific global variables
 
 ### Configuration
 
@@ -45,6 +48,65 @@ Your project uses:
     ]
   }
 }
+```
+
+**ESLint Configuration (eslint.config.js):**
+
+```javascript
+import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import globals from 'globals';
+import validateFilename from 'eslint-plugin-validate-filename';
+import ts from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+
+export default [
+  js.configs.recommended,
+  prettier,
+
+  // Base JS config with naming conventions
+  {
+    files: ['**/*.js'],
+    plugins: {
+      'validate-filename': validateFilename,
+      '@typescript-eslint': ts,
+    },
+    languageOptions: {
+      parser: tsParser,
+      globals: { ...globals.node },
+    },
+    rules: {
+      // Naming conventions
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'class', format: ['PascalCase'] },
+        { selector: 'function', format: ['camelCase'] },
+        { selector: 'variable', format: ['camelCase'] },
+      ],
+      // Filename validation
+      'validate-filename/naming-rules': [
+        'error',
+        {
+          rules: [
+            { case: 'camel', target: '**/cypress/**/*.js', excludes: ['e2e'] },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Markdown filename validation
+  {
+    files: ['**/*.md'],
+    plugins: { 'validate-filename': validateFilename },
+    rules: {
+      'validate-filename/naming-rules': [
+        'error',
+        { rules: [{ case: 'camel', target: '**/*.md' }] },
+      ],
+    },
+  },
+];
 ```
 
 ---
@@ -125,6 +187,24 @@ git commit -m "Add form submission tests"
 - `--ext .js,.md` - Check both JavaScript and Markdown files
 - `--max-warnings=0` - Fail on any warnings
 - `prettier --write` - Format files automatically
+
+**Key Linting Rules:**
+
+1. **Naming Conventions** (enforced by @typescript-eslint):
+   - Classes: `PascalCase` (e.g., `UserProfile`, `FormValidator`)
+   - Functions: `camelCase` (e.g., `getUserData`, `validateForm`)
+   - Variables: `camelCase` (e.g., `userName`, `formData`)
+
+2. **Filename Validation** (enforced by eslint-plugin-validate-filename):
+   - Markdown files: `camelCase` (e.g., `lintingSdGuide.md`, not `linting_sd_guide.md`)
+   - Cypress files: `camelCase` except in `e2e` folder (e.g., `loginHelper.js`)
+   - Test files (.cy.js): Must be in `cypress/e2e/` folder only
+
+3. **Code Quality**:
+   - No unused variables (except prefixed with `_`)
+   - Use `const` for non-reassigned variables
+   - No `var` keyword (use `let` or `const`)
+   - No `debugger` statements (warnings only)
 
 ---
 
@@ -286,6 +366,30 @@ npm run format
 
 # Check formatting
 npm run format:check
+
+# Check markdown filenames
+npm run lint:md-names
+```
+
+### Common Linting Fixes
+
+```bash
+# Fix naming convention issues
+# Classes: Use PascalCase
+class UserProfile {}  # ✅
+class userProfile {}  # ❌ Fix to UserProfile
+
+# Functions: Use camelCase
+function getUserData() {}  # ✅
+function GetUserData() {}  # ❌ Fix to getUserData
+
+# Variables: Use camelCase
+const userName = 'John';  # ✅
+const user_name = 'John';  # ❌ Fix to userName
+
+# Filenames: Use camelCase for .md and cypress files
+lintingSdGuide.md  # ✅
+linting_sd_guide.md  # ❌ Rename to lintingSdGuide.md
 ```
 
 ### Git Commands
@@ -318,6 +422,38 @@ npm run format
 # Then commit
 git add .
 git commit -m "Fix linting issues"
+```
+
+**Naming convention errors:**
+
+```javascript
+// ❌ Error: Class name must be PascalCase
+class userProfile {}
+
+// ✅ Fix: Use PascalCase
+class UserProfile {}
+
+// ❌ Error: Function name must be camelCase
+function GetUserData() {}
+
+// ✅ Fix: Use camelCase
+function getUserData() {}
+```
+
+**Filename validation errors:**
+
+```bash
+# ❌ Error: Markdown file must be camelCase
+linting_sd_guide.md
+
+# ✅ Fix: Rename to camelCase
+lintingSdGuide.md
+
+# ❌ Error: .cy.js file outside cypress/e2e folder
+src/tests/login.cy.js
+
+# ✅ Fix: Move to correct location
+cypress/e2e/login.cy.js
 ```
 
 **Pre-commit hook not working:**

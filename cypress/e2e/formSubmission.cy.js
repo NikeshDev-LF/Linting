@@ -15,7 +15,7 @@ describe('DemoQA Practice Form - submission', () => {
 
   beforeEach(() => {
     cy.visit('/automation-practice-form');
-    // console.log('Visiting form page');
+    console.log('Visiting form page');
   });
 
   it('fills and submits the form', function () {

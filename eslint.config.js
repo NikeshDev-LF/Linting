@@ -1,37 +1,103 @@
-const js = require('@eslint/js');
-const prettier = require('eslint-config-prettier');
-const markdown = require('eslint-plugin-markdown');
+import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import globals from 'globals';
+import validateFilename from 'eslint-plugin-validate-filename';
+import ts from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
-module.exports = [
+export default [
   js.configs.recommended,
   prettier,
 
   // Base JS config
   {
-    plugins: {},
+    files: ['**/*.js'],
+    plugins: {
+      'validate-filename': validateFilename,
+      '@typescript-eslint': ts,
+    },
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
+      parser: tsParser,
       globals: {
-        require: 'readonly',
-        module: 'readonly',
-        process: 'readonly',
-        browser: true,
-        node: true,
+        ...globals.node,
       },
     },
     rules: {
-      camelcase: ['error', { properties: 'always' }],
-      'no-console': 'warn',
+      'no-console': 'off',
       'no-debugger': 'warn',
-      'no-unused-vars': [
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       'prefer-const': 'error',
       'no-var': 'error',
       'no-underscore-dangle': 'off',
-      'id-match': 'off',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        // Classes: PascalCase
+        {
+          selector: 'class',
+          format: ['PascalCase'],
+          leadingUnderscore: 'forbid',
+        },
+        // Functions: camelCase
+        {
+          selector: 'function',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+        },
+        // Variables: camelCase or UPPER_CASE
+        {
+          selector: 'variable',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+        },
+      ],
+      'validate-filename/naming-rules': [
+        'error',
+        {
+          rules: [
+            {
+              case: 'camel',
+              target: '**/cypress/**/*.js',
+              // excludes: ['e2e'], // e2e folder can have any naming
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // ✅ Markdown files - filename validation only
+  {
+    files: ['**/*.md'],
+    plugins: {
+      'validate-filename': validateFilename,
+    },
+    processor: {
+      preprocess() {
+        return [''];
+      },
+      postprocess(messages) {
+        return messages[0] || [];
+      },
+      supportsAutofix: false,
+    },
+    rules: {
+      'validate-filename/naming-rules': [
+        'error',
+        {
+          rules: [
+            {
+              case: 'camel',
+              target: '**/*.md',
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -51,31 +117,6 @@ module.exports = [
         context: 'readonly',
         specify: 'readonly',
       },
-    },
-    rules: {
-      'no-console': 'off',
-    },
-  },
-
-  // ✅ Markdown files - lint content & enforce camelCase naming
-  {
-    plugins: { markdown },
-    files: ['**/*.md'],
-    processor: 'markdown/markdown',
-    rules: {
-      'id-match': [
-        'error',
-        '^(?!.*\\/)[a-z]+([A-Z][a-z0-9]+)*\\.md$',
-        { properties: false, onlyDeclarations: false },
-      ],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Program',
-          message:
-            'Markdown files must be in the project root and use camelCase naming (e.g., readMe.md).',
-        },
-      ],
     },
   },
 
